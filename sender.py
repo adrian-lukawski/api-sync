@@ -8,7 +8,7 @@ STATUS_CODE = 202
 API_VERSION = 10
 API_KEY = 'putApiKeyHere' # api key
 URL = 'http://api.kontakt.io/event/collect'
-GATEWAY_UNIQUE_ID = 'putApUniqueIdHere' # AP unique id
+GATEWAY_UNIQUE_ID = 'putApUniqueId' # AP unique id
 
 headers = {
 	'Api-Key': API_KEY,
@@ -22,7 +22,7 @@ timestamp = int(time.time())
 
 payload = {
   "events": [{
-      "rssi": -50,
+      "rssi": -41,
       "data": "AgEGGv9MAAIVg4f8zZ21QWOGGOhYcVXUTv//AAD0",
       "srData": "ChYN0HlhdW00MjI=",
       "timestamp": timestamp,
@@ -41,7 +41,14 @@ gz = gzip.GzipFile(fileobj=compressed_body, mode="wb") # GZIP payload
 gz.write(json.dumps(payload))
 gz.close()
 
-response = requests.post(URL, data=compressed_body.getvalue(), headers=headers)
+# connection will be kept alive as long as session object will be available
+session = requests.Session()
 
-if response.status_code == STATUS_CODE: print 'Success'
-else: print 'something went wrong (http status code: {})'.format(response.status_code)
+for i in range(1, 10):
+  timestamp = int(time.time())
+  response = session.post(url=URL, data=compressed_body.getvalue(), headers=headers)
+  print 'Success' if response.status_code == STATUS_CODE else 'something went wrong (http status code: {})'.format(response.status_code)
+  time.sleep(1)
+
+
+session.close()
